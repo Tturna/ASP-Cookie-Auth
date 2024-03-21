@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    
+    @if (User.Identity.IsAuthenticated)
+    {
+        <h1>Hello @(User.Identity.Name)</h1>
+        
+        @if (User.IsInRole("Admin"))
+        {
+            <button class="btn btn-danger">Send Missile Alert</button>
+        }
+        
+        <form asp-controller="Login" asp-action="Logout" method="get">
+            <button class="btn btn-info">Logout</button>
+        </form>
+    }
+    else
+    {
+        @Html.ActionLink("Login", "Index", "Login", null, new { @class = "btn btn-primary" })
+    }
+</div>
