@@ -1,4 +1,6 @@
 ﻿using System.Security.Claims;
+using ASP_Cookie_Auth.Data;
+using ASP_Cookie_Auth.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -8,19 +10,47 @@ namespace ASP_Cookie_Auth.Controllers;
 
 public class LoginController : Controller
 {
+    private ApplicationDbContext _dbContext;
+    
+    public LoginController(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+    
     public IActionResult Index()
     {
         return View();
     }
-    
-    public IActionResult Login(string username)
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult Register(RegisterDataModel registerData)
     {
+        
+    }
+    
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult Login(LoginDataModel loginData)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Index", loginData);
+        }
+        
+        var user = _dbContext.Users.FirstOrDefault(u =>
+            u.Username == loginData.Username && u.Password == loginData.Password);
+
+        if (user == null)
+        {
+            ModelState.AddModelError(nameof(loginData.Password), "Invalid username or password.");
+            return View("Index", loginData);
+        }
+        
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, username)
+            new(ClaimTypes.Name, loginData.Username)
         };
         
-        if (username == "hermano")
+        if (loginData.Username == "hermano")
         {
             claims.Add(new Claim(ClaimTypes.Role, "Admin"));
         }
@@ -31,7 +61,7 @@ public class LoginController : Controller
         {
             AllowRefresh = true,
             ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30),
-            IsPersistent = true
+            // IsPersistent = true
         };
 
         HttpContext.SignInAsync(
